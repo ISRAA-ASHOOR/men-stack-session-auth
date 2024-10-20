@@ -4,6 +4,7 @@ const morgan = require('morgan');
 require('dotenv').config();
 require('./config/database');
 const authController = require("./controllers/auth.js");
+const session = require('express-session');
 
 const app = express();
 
@@ -16,12 +17,21 @@ app.use(express.urlencoded({ extended: false }));
 app.use(methodOverride('_method'));
 // Morgan for logging HTTP requests
 app.use(morgan('dev'));
+app.use(
+    session({
+      secret: process.env.SESSION_SECRET,
+      resave: false,
+      saveUninitialized: true,
+    })
+);
 app.use("/auth", authController);
 
-app.listen(port, () => {
-  console.log(`The express app is ready on port ${port}!`);
+app.get("/", (req, res) => {
+    res.render("index.ejs", {
+      user: req.session.user,
+    });
 });
 
-app.get("/", async (req, res) => {
-    res.render("index.ejs");
+app.listen(port, () => {
+    console.log(`The express app is ready on port ${port}!`);
 });
