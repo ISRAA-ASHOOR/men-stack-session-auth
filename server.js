@@ -6,6 +6,8 @@ require('./config/database');
 const authController = require("./controllers/auth.js");
 const session = require('express-session');
 const MongoStore = require("connect-mongo");
+const isSignedIn = require("./middleware/is-signed-in.js");
+const passUserToView = require("./middleware/pass-user-to-view.js");
 
 const app = express();
 
@@ -28,16 +30,16 @@ app.use(
       }),
     })
 );
+// Add our custom middleware right after the session middleware
+app.use(passUserToView);
 
 app.use("/auth", authController);
 
 app.get("/", (req, res) => {
-    res.render("index.ejs", {
-      user: req.session.user,
-    });
+    res.render("index.ejs");
 });
 
-app.get("/vip-lounge", (req, res) => {
+app.get("/vip-lounge", isSignedIn, (req, res) => {
     if (req.session.user) {
         res.send(`Welcome to the party ${req.session.user.username}.`);
     } else {
